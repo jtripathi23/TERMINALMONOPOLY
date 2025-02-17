@@ -27,36 +27,30 @@ TERMINALS = [ss.Terminal(1, (2, 2)), ss.Terminal(2, (ss.cols+3, 2)), ss.Terminal
 active_terminal = TERMINALS[0]
 
 class Player:
-    def __init__(self):
-        self.name = name_validation
-        self.money = 100
-        self.fish_inventory = {}
+    def __init__(self, name):
+        self.name = name
+        self.money = 100  # Player starts with $100
+        self.fish_inventory = {"Carp": 0, "Bass": 0, "Salmon": 0}
 
     def add_fish(self, fish_name, quantity=1):
-        """"Add caught fish to inventory"""
+        """Add caught fish to inventory"""
         if fish_name in self.fish_inventory:
             self.fish_inventory[fish_name] += quantity
-        else:
-            self.fish_inventory[fish_name] = quantity
 
     def remove_fish(self, fish_name, quantity=1):
-        """Remove Fish from inventory when selling"""
-        if fish_name in self.fish_inventory:
-            if self.fish_inventory[fish_name] >= quantity:
-                self.fish_inventory[fish_name] -= quantity
-                if self.fish_inventory[fish_name] == 0:
-                    del self.fish_inventory[fish_name]
-                return True
+        """Remove fish from inventory"""
+        if fish_name in self.fish_inventory and self.fish_inventory[fish_name] >= quantity:
+            self.fish_inventory[fish_name] -= quantity
+            return True
         return False
 
     def show_inventory(self):
-        """Display the player's inventory"""
-        if not self.fish_inventory:
-            print("Your inventory is empty")
-        else:
-            print("Your fish inventory")
-            for fish, qty in self.fish_inventory.items():
-                print(f"{fish}: {qty}")
+        """Display player's fish inventory"""
+        print("\nYour Fish Inventory:")
+        for fish, qty in self.fish_inventory.items():
+            if qty > 0:
+                print(f"- {fish}: {qty}")
+        print(f"\nBalance: ${self.money}")
 
 
 class FishingModule:
@@ -70,40 +64,7 @@ class FishingModule:
         print(f"You caught a {caught_fish}")
         self.player.add_fish(caught_fish)
 
-class Shop:
-    def __init__(self):
-        self.player = player
-        self.fish_prices = {
-            "Salmon": 10,
-            "Tuna": 15,
-            "Trout": 7,
-            "Cod": 5
-        }
 
-    def sell_fish(self, fish_name, quantity=1):
-        """Sell fish from inventory"""
-        if fish_name in self.fish_prices and self.player.remove_fish(fish_name, quantity):
-            earnings = self.fish_prices[fish_name] * quantity
-            self.player.money += earnings
-            print(f"Sold {quantity} {fish_name}(s) for ${earnings}.")
-        else:
-            print("You don't have enough of that fish to sell.")
-
-    def shop_menu(self):
-        """Display the shop menu"""
-        print("\nWelcome to the Fish Shop!")
-        print("Fish Prices:")
-        for fish, price in self.fish_prices.items():
-            print(f"- {fish}: ${price} each")
-
-        choice = input("\nWhich fish would you like to sell? (or 'exit' to leave: ").capitalize()
-        if choice in self.fish_prices:
-            qty = int(input(f"How many {choice}(s) would you like to sell?"))
-            self.sell_fish(choice, qty)
-        elif choice == 'Exit':
-            print("Leaving the shop.")
-        else:
-            print("Invalid choice. Please try again.")
 
 
 def banker_check():

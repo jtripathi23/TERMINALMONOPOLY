@@ -3,7 +3,7 @@ class MonopolyPlayer:
     Player class for Monopoly game\n
     Contains player data.\n
     """
-    def __init__(self, cash:int, order:int, name: str) -> None:
+    def __init__(self, cash: int, order: int, name: str) -> None:
         self.cash = cash
         self.properties = []
         self.order = order
@@ -13,6 +13,9 @@ class MonopolyPlayer:
         self.name = name if name != "" else "Player " + str(order)
         self.jail_turns = 0
         self.repeat_offender = 0
+
+        self.fish_inventory = {"Carp": 0, "Bass": 0, "Salmon": 0, "Trout": 0, "Cod": 0}
+
     """
     Player cash\n
     @cash: int\n
@@ -32,7 +35,7 @@ class MonopolyPlayer:
         self.cash -= board.locations[location].getPrice()
         if (board.locations[location].owner == -1):
             board.locations[location].owner = self.order
-            if location == 5 or location == 15 or location == 25 or location == 35: # railroad
+            if location == 5 or location == 15 or location == 25 or location == 35:   # railroad
                 owned_rails = [k for k in [5, 15, 25, 35] if board.locations[k].owner == self.order]
                 for k in owned_rails:
                     board.locations[k].houses = len(owned_rails)   
@@ -100,3 +103,32 @@ class MonopolyPlayer:
 
     def __str__(self) -> str:
         return self.name
+
+    def add_fish(self, fish_name, quantity=1):
+        """Add caught fish to inventory"""
+        if fish_name in self.fish_inventory:
+            self.fish_inventory[fish_name] += quantity
+        print(f"🎣 You caught a {fish_name}! Added to your inventory.")
+
+    def remove_fish(self, fish_name, quantity=1):
+        """Remove fish from inventory"""
+        if self.fish_inventory.get(fish_name, 0) >= quantity:
+            self.fish_inventory[fish_name] -= quantity
+            return True
+        return False
+
+    def show_inventory(self):
+        """Display player's fish inventory"""
+        print("\n📦 Your Fish Inventory:")
+        for fish, qty in self.fish_inventory.items():
+            if qty > 0:
+                print(f" - {fish}: {qty}")
+        print(f"\n💰 Balance: ${self.cash}")
+
+    def sell_fish(self, fish_name, price):
+        """Sell fish and earn money"""
+        if self.remove_fish(fish_name):
+            self.cash += price
+            print(f"💰 Sold 1 {fish_name} for ${price}. New Balance: ${self.cash}")
+        else:
+            print(f"You don't have any {fish_name} to sell!")

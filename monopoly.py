@@ -12,6 +12,10 @@ import screenspace as ss
 import style as s
 from style import graphics as g
 
+from shop import Shop
+from fishing import FishingModule
+
+
 mode = "normal"
 output = ""
 gameboard = ""
@@ -700,11 +704,11 @@ def end_turn():
     global turn
     turn = (turn + 1)%num_players
 
-def player_choice():
+def player_choice(fishing_module=None):
     global bankrupts
     if(players[turn].cash > 0):
         print("\033[36;0H" + ' ' * 70)
-        choice = input("\033[36;0He to end turn, p to manage properties, d to view a deed?")
+        choice = input("\033[36;0He to end turn, p to manage properties, d to view a deed, fish to go fishing?")
         while(choice != 'e'): 
             if choice == "e":
                 pass
@@ -712,10 +716,12 @@ def player_choice():
                 manage_properties(players[turn])
             elif choice == "d":
                 update_status(players[turn], "deed")
+            elif choice == "fish":
+                fishing_module.fish()
             else:
                 add_to_output("Invalid option!")
             print("\033[36;0H" + ' ' * 70)
-            choice = input("\033[36;0He to end turn, p to manage properties, d to view a deed?")
+            choice = input("\033[36;0He to end turn, p to manage properties, d to view a deed, fish to go fishing?")
         update_history(f"{players[turn].name} ended their turn.")
     else:
         update_history(f"{players[turn]} is in debt. Resolve debts before ending turn.")
@@ -751,6 +757,9 @@ def start_game(cash: int, num_p: int, names: list[str]) -> str:
     players = []
     for i in range(num_players):
         players.append(MonopolyPlayer(CASH, i, names[i]))
+
+    local_player = players[0]
+    fishing_module = FishingModule(local_player)
 
     add_to_output(COLORS.WHITE + "\033[0;0H")
     add_to_output(gameboard)

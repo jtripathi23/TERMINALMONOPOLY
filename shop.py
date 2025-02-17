@@ -1,5 +1,5 @@
-import keyboard
 import os
+import keyboard
 from style import set_cursor_str, graphics as g
 
 class FishInventory():
@@ -51,10 +51,17 @@ class Shop():
                 retval += set_cursor_str(45, y+1) + f"{fish} x{testfishinventory.caughtfish[fish]} "
               
         print(retval)
-        
-    def sellfish(self, fish):
-    # TODO: implement selling properly
-        pass
+
+    def sell_fish(self, fish_name):
+        """Sell fish from the player's inventory."""
+        if self.player.fish_inventory.get(fish_name, 0) > 0:
+            price = self.fish_prices[fish_name]
+            self.player.remove_fish(fish_name)
+            self.player.money += price
+            print(f"\nYou sold 1 {fish_name} for ${price}.")
+            print(f"New balance: ${self.player.money}\n")
+        else:
+            print("\nYou don't have any of that fish to sell.")
 
     # TODO: update shop screen in response to input
     def shop_interface(self):
