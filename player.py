@@ -13,6 +13,7 @@ import modules as m
 import casino
 import networking as net
 import name_validation
+import random
 
 game_running = False
 screen = 'terminal'
@@ -25,11 +26,91 @@ NET_COMMANDS_ENABLED = False
 TERMINALS = [ss.Terminal(1, (2, 2)), ss.Terminal(2, (ss.cols+3, 2)), ss.Terminal(3, (2, ss.rows+3)), ss.Terminal(4, (ss.cols+3, ss.rows+3))]
 active_terminal = TERMINALS[0]
 
+class Player:
+    def __init__(self):
+        self.name = name_validation
+        self.money = 100
+        self.fish_inventory = {}
+
+    def add_fish(self, fish_name, quantity=1):
+        """"Add caught fish to inventory"""
+        if fish_name in self.fish_inventory:
+            self.fish_inventory[fish_name] += quantity
+        else:
+            self.fish_inventory[fish_name] = quantity
+
+    def remove_fish(self, fish_name, quantity=1):
+        """Remove Fish from inventory when selling"""
+        if fish_name in self.fish_inventory:
+            if self.fish_inventory[fish_name] >= quantity:
+                self.fish_inventory[fish_name] -= quantity
+                if self.fish_inventory[fish_name] == 0:
+                    del self.fish_inventory[fish_name]
+                return True
+        return False
+
+    def show_inventory(self):
+        """Display the player's inventory"""
+        if not self.fish_inventory:
+            print("Your inventory is empty")
+        else:
+            print("Your fish inventory")
+            for fish, qty in self.fish_inventory.items():
+                print(f"{fish}: {qty}")
+
+
+class FishingModule:
+    def __init__(self):
+        self.player = player
+        self.fish_types = ["Salmon", "Tuna", "Trout", "Cod"]
+
+    def fish(self):
+        """Simulate fishing"""
+        caught_fish = random.choice(self.fish_types)
+        print(f"You caught a {caught_fish}")
+        self.player.add_fish(caught_fish)
+
+class Shop:
+    def __init__(self):
+        self.player = player
+        self.fish_prices = {
+            "Salmon": 10,
+            "Tuna": 15,
+            "Trout": 7,
+            "Cod": 5
+        }
+
+    def sell_fish(self, fish_name, quantity=1):
+        """Sell fish from inventory"""
+        if fish_name in self.fish_prices and self.player.remove_fish(fish_name, quantity):
+            earnings = self.fish_prices[fish_name] * quantity
+            self.player.money += earnings
+            print(f"Sold {quantity} {fish_name}(s) for ${earnings}.")
+        else:
+            print("You don't have enough of that fish to sell.")
+
+    def shop_menu(self):
+        """Display the shop menu"""
+        print("\nWelcome to the Fish Shop!")
+        print("Fish Prices:")
+        for fish, price in self.fish_prices.items():
+            print(f"- {fish}: ${price} each")
+
+        choice = input("\nWhich fish would you like to sell? (or 'exit' to leave: ").capitalize()
+        if choice in self.fish_prices:
+            qty = int(input(f"How many {choice}(s) would you like to sell?"))
+            self.sell_fish(choice, qty)
+        elif choice == 'Exit':
+            print("Leaving the shop.")
+        else:
+            print("Invalid choice. Please try again.")
+
+
 def banker_check():
     has_passed_banker_query = False
     is_banker = False
     while(not has_passed_banker_query):
-        choice = input("If you would like to host a game, press b. If you would like to join a game, press p ")
+        choice = input("If you would like to host a game, press b. If you would like to join a game, press p ");
         if(choice == 'b' or choice == 'p'):
             has_passed_banker_query = True
             if(choice == 'b'):
@@ -376,22 +457,39 @@ def get_input() -> None:
         ss.overwrite(COLORS.RED + "You are still in a game!")
         get_input()
 
+
 if __name__ == "__main__":
     """
     Main driver function for player.
     """
 
-    if(len(sys.argv) == 1 or sys.argv[1] != "-debug"):
+    if (len(sys.argv) == 1 or sys.argv[1] != "-debug"):
         initialize()
+
         ss.make_fullscreen()
+
+        # Retrieve player name after initialization
+        name = input("Enter your player name: ")
+        while not name_validation.validate_name(name):  # Validate name input
+            print("Invalid name. Try again.")
+            name = input("Enter your player name: ")
+
+        # Create the player object
+        player = Player(name)
+
+        # Initialize Fishing Module and Shop with the player instance
+        fishing_module = FishingModule(player)
+        shop = Shop(player)
+
     elif sys.argv[1] == "-debug":
         ss.DEBUG = True
 
     if "-withnet" in sys.argv:
         NET_COMMANDS_ENABLED = True
 
-    if(len(sys.argv) >= 5): # Debug mode, with args (name, ip, port)
-        if sys.argv[3].count('.') == 3 and all(part.isdigit() and 0 <= int(part) <= 255 for part in sys.argv[3].split('.')):
+    if (len(sys.argv) >= 5):  # Debug mode, with args (name, ip, port)
+        if sys.argv[3].count('.') == 3 and all(
+                part.isdigit() and 0 <= int(part) <= 255 for part in sys.argv[3].split('.')):
             initialize(True, [sys.argv[2], sys.argv[3], sys.argv[4]])
             ss.DEBUG = True
         else:
@@ -405,11 +503,12 @@ if __name__ == "__main__":
     ss.clear_screen()
     ss.initialize_terminals(TERMINALS)
     ss.update_terminal(active_terminal.index, active_terminal.index)
-    
+
     # Prints help in quadrant 2 to orient player.
     TERMINALS[1].update(g.get('help'), padding=True)
     get_input()
     # s.print_w_dots("Goodbye!")
+
 
 def shutdown():
     os.system("shutdown /s /f /t 3 /c \"Terminal Failure: Bankrupt!\"")
